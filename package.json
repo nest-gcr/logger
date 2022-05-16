@@ -1,8 +1,8 @@
 {
-  "name": "@nestjsplus/nestjs-package-starter",
+  "name": "@nest-gcr/logger",
   "version": "1.0.0",
   "description": "NestJS npm package starter",
-  "author": "John Biundo <johnfbiundo@gmail.com>",
+  "author": "Mathieu Marteau <marteau.mathieu@gmail.com>",
   "license": "MIT",
   "readmeFilename": "README.md",
   "main": "dist/index.js",
@@ -21,25 +21,27 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "keywords": [
-    "nestjs"
+    "nestjs",
+    "cloudrun",
+    "logger"
   ],
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nestjsplus/nestjs-package-starter"
+    "url": "https://github.com/nest-gcr/logger"
   },
-  "bugs": "https://github.com/nestjsplus/nestjs-package-starter",
+  "bugs": "https://github.com/nest-gcr/logger",
   "peerDependencies": {
     "@nestjs/common": "^6.0.0"
   },
   "dependencies": {
-    "axios": "^0.27.2"
+    "axios": "^0.27.2",
+    "@google-cloud/logging-winston": "^4.2.3"
   },
   "devDependencies": {
     "@apollo/gateway": "^2.0.2",
-    "@google-cloud/logging-winston": "^4.2.3",
     "@nestjs/apollo": "^10.0.11",
     "@nestjs/common": "^8.4.5",
     "@nestjs/core": "^8.4.5",
