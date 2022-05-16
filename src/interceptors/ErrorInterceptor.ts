@@ -8,7 +8,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { LOGGER } from '../constants';
 import { Logger } from 'winston';
-import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
+// import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 import { ContextIdFactory, ModuleRef } from '@nestjs/core';
 
 @Injectable()
@@ -32,12 +32,16 @@ export class ErrorInterceptor implements NestInterceptor {
     );
   }
 
-  getRequest(context: ExecutionContext) {
-    if (context.getType<GqlContextType>() === 'graphql') {
-      // do something that is only important in the context of GraphQL requests
-      const gql = GqlExecutionContext.create(context);
-      return gql.getContext().req;
-    }
+  async getRequest(context: ExecutionContext) {
+    try {
+      const { GqlExecutionContext } = await import('@nestjs/graphql');
+      if (context.getType<'graphql'>() === 'graphql') {
+        // do something that is only important in the context of GraphQL requests
+        const gql = GqlExecutionContext.create(context);
+        return gql.getContext().req;
+      }
+      // tslint:disable-next-line:no-empty
+    } catch {}
 
     return context.switchToHttp().getRequest();
   }

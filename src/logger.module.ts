@@ -7,7 +7,6 @@ import axios from 'axios';
 import { install } from 'source-map-support';
 import { LOGGER } from './constants';
 import { ErrorInterceptor } from './interceptors/ErrorInterceptor';
-import { CONTEXT } from '@nestjs/graphql';
 import { LoggerPlugin } from './logger.plugin';
 
 install();
@@ -75,8 +74,8 @@ export const rootLogger = winston.createLogger({
     },
     {
       provide: LOGGER.PROVIDERS.REQUEST_LOGGER,
-      useFactory: (logger: winston.Logger, request: Request, tracePrefix: string, context: any) => {
-        const req = context?.req || request;
+      useFactory: (logger: winston.Logger, request: any | Request, tracePrefix: string) => {
+        const req = request?.req || request;
         let traceKey = (Math.random() + 1).toString(36).substring(7);
         let spanKey = 'unknown-span-key';
         if (req?.headers?.['x-cloud-trace-context'] && typeof req?.headers?.['x-cloud-trace-context'] === 'string') {
@@ -92,7 +91,7 @@ export const rootLogger = winston.createLogger({
 
         return childLogger;
       },
-      inject: [LOGGER.PROVIDERS.LOGGER, REQUEST, 'LOGGER_TRACE_ID_PREFIX', CONTEXT],
+      inject: [LOGGER.PROVIDERS.LOGGER, REQUEST, 'LOGGER_TRACE_ID_PREFIX'],
     },
     {
       provide: 'LOGGER_TRACE_ID',
