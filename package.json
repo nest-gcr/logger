@@ -1,6 +1,6 @@
 {
   "name": "@nest-gcr/logger",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "NestJS npm package starter",
   "author": "Mathieu Marteau <marteau.mathieu@gmail.com>",
   "license": "MIT",
