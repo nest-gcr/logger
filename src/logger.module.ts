@@ -4,6 +4,8 @@ import * as winston from 'winston';
 import {Request} from 'express';
 import { REQUEST } from '@nestjs/core';
 import axios from 'axios';
+import { install } from 'source-map-support';
+install();
 
 export const LOGGER = {
   PROVIDERS: {
@@ -17,9 +19,6 @@ export const LOGGER = {
     {
       provide: LOGGER.PROVIDERS.LOGGER,
       useFactory: () => {
-        const loggingWinston = new LoggingWinston({
-          redirectToStdout: true,
-        });
         const myFormat = winston.format.printf((options) => {
           const getSeverity = () => {
             switch (options.level) {
