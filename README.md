@@ -6,7 +6,7 @@
   </a>
 </div>
 
-<h3 align="center">NestJS npm Package Starter</h3>
+<h3 align="center">NestJS Logger for Google Cloud Run</h3>
 
 <div align="center">
   <a href="https://nestjs.com" target="_blank">
@@ -14,14 +14,41 @@
   </a>
 </div>
 
-### Installation
+## Installation
 
-1. Clone the repo
-2. Run npm/yarn install
+1. Install the dependency
+```
+yarn add @nest-gcr/logger
+```
 
-```bash
-cd nestjs-package-starter
-npm install
+2. Register the module
+
+```typescript
+import { Module } from '@nestjs/common';
+import { LoggerModule } from '@nest-gcr/logger';
+
+@Module({
+  imports: [LoggerModule]
+})
+export class AppModule {}
+```
+
+## Usage
+
+Use it anywhere in your application. You have access to two providers:
+
+```typescript
+import { Inject, Injectable } from '@nestjs/common';
+import { LOGGER, Logger } from '@nest-gcr/logger'
+
+@Injectable()
+export class MyProvider {
+  constructor(
+    @Inject(LOGGER.PROVIDERS.LOGGER) logger: Logger,
+    @Inject(LOGGER.PROVIDERS.REQUEST_LOGGER) requestLogger: Logger
+  ) {
+  }
+}
 ```
 
 ## Change Log

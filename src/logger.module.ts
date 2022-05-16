@@ -32,7 +32,24 @@ const myFormat = winston.format.printf((options) => {
     });
   }
 
-  return `[${options.level.toUpperCase()}][${options.timestamp}][${options[LoggingWinston.LOGGING_TRACE_KEY] || 'global'}] ${options.stack ? options.stack : options.message}`
+  const colorizer = winston.format.colorize();
+
+  const getMessage = () => {
+    if (options.stack) {
+      return options.stack;
+    }
+    if (options.message && typeof options.message === 'object') {
+      try {
+        return JSON.stringify(options.message);
+        // tslint:disable-next-line:no-empty
+      } catch {
+      }
+    }
+    return options.message;
+  };
+
+  // tslint:disable-next-line:max-line-length
+  return colorizer.colorize(options.level, `[${options.level.toUpperCase()}][${options.timestamp}][${options[LoggingWinston.LOGGING_TRACE_KEY] || 'global'}][${options.className || 'UNKNOWN'}] ${getMessage()}`);
 });
 
 export const rootLogger = winston.createLogger({

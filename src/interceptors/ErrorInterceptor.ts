@@ -21,9 +21,12 @@ export class ErrorInterceptor implements NestInterceptor {
     const req = this.getRequest(context);
     const contextId = ContextIdFactory.getByRequest(req);
     const logger = await this.moduleRef.resolve<string, Logger>(LOGGER.PROVIDERS.REQUEST_LOGGER, contextId);
+    const childLogger = logger.child({
+      className: 'ErrorInterceptor',
+    });
     return next.handle().pipe(
       catchError((err) => {
-        logger.error(err);
+        childLogger.error(err);
         return throwError(err);
       }),
     );

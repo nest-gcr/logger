@@ -38,7 +38,8 @@
   },
   "dependencies": {
     "axios": "^0.27.2",
-    "@google-cloud/logging-winston": "^4.2.3"
+    "@google-cloud/logging-winston": "^4.2.3",
+    "winston": "^3.7.2"
   },
   "devDependencies": {
     "@apollo/gateway": "^2.0.2",
@@ -65,8 +66,7 @@
     "tsc-watch": "2.2.1",
     "tsconfig-paths": "3.8.0",
     "tslint": "5.16.0",
-    "typescript": "4.6.4",
-    "winston": "^3.7.2"
+    "typescript": "4.6.4"
   },
   "jest": {
     "moduleFileExtensions": [

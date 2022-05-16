@@ -3,3 +3,4 @@
 // export * from './decorators';
 export * from './logger.module';
 export { LOGGER } from './constants';
+export {Logger} from 'winston';
