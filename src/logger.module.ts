@@ -7,7 +7,6 @@ import axios from 'axios';
 import { install } from 'source-map-support';
 import { LOGGER } from './constants';
 import { ErrorInterceptor } from './interceptors/ErrorInterceptor';
-import { LoggerPlugin } from './logger.plugin';
 
 install();
 
@@ -127,9 +126,10 @@ export const rootLogger = winston.createLogger({
     {
       provide: APP_INTERCEPTOR,
       useClass: ErrorInterceptor,
-    },
-    LoggerPlugin,
+    }
   ],
   exports: [LOGGER.PROVIDERS.LOGGER, LOGGER.PROVIDERS.REQUEST_LOGGER],
 })
-export class LoggerModule {}
+export class LoggerModule {
+
+}
