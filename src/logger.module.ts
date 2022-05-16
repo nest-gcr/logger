@@ -1,52 +1,50 @@
 import { Module } from '@nestjs/common';
 import { LoggingWinston } from '@google-cloud/logging-winston';
 import * as winston from 'winston';
-import {Request} from 'express';
-import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
+import { APP_INTERCEPTOR, REQUEST } from '@nestjs/core';
 import axios from 'axios';
 import { install } from 'source-map-support';
+import { LOGGER } from './constants';
+import { ErrorInterceptor } from './interceptors/ErrorInterceptor';
+
 install();
 
-export const LOGGER = {
-  PROVIDERS: {
-    LOGGER: 'LOGGER',
-    REQUEST_LOGGER: 'REQUEST_LOGGER',
-  },
-};
+const myFormat = winston.format.printf((options) => {
+  const getSeverity = () => {
+    switch (options.level) {
+      case 'WARN':
+        return 'WARNING';
+      default:
+        return options.level.toUpperCase();
+    }
+  };
+
+  return JSON.stringify({
+    ...options,
+    severity: getSeverity(),
+    message: options.stack ? options.stack : options.message,
+  });
+});
+export const rootLogger = winston.createLogger({
+  level: 'debug',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    myFormat,
+  ),
+  transports: [
+    new winston.transports.Console(),
+    // Add Stackdriver Logging
+    // loggingWinston,
+  ],
+});
 
 @Module({
   providers: [
     {
       provide: LOGGER.PROVIDERS.LOGGER,
       useFactory: () => {
-        const myFormat = winston.format.printf((options) => {
-          const getSeverity = () => {
-            switch (options.level) {
-              case 'WARN':
-                return 'WARNING';
-              default:
-              return options.level.toUpperCase();
-            }
-          };
-          return JSON.stringify({
-            ...options,
-            severity: getSeverity(),
-            message: options.stack ? options.stack : options.message,
-          });
-        });
-        const logger = winston.createLogger({
-          level: 'debug',
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            myFormat,
-          ),
-          transports: [
-            new winston.transports.Console(),
-            // Add Stackdriver Logging
-            // loggingWinston,
-          ],
-        });
-        return logger;
+        return rootLogger;
       },
     },
     {
@@ -85,6 +83,10 @@ export const LOGGER = {
         }
       },
       inject: [LOGGER.PROVIDERS.LOGGER],
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ErrorInterceptor,
     },
   ],
   exports: [LOGGER.PROVIDERS.LOGGER, LOGGER.PROVIDERS.REQUEST_LOGGER],

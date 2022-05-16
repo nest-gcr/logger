@@ -1,7 +1,7 @@
-import { Controller, Get, Inject, Req } from '@nestjs/common';
-import { LOGGER } from '../../logger.module';
+import { Controller, Get, HttpException, Inject, NotFoundException, Req } from '@nestjs/common';
 import { Logger } from 'winston';
 import { Request } from 'express';
+import { LOGGER } from '../../constants';
 
 @Controller()
 export class TestController {
@@ -14,9 +14,24 @@ export class TestController {
   @Get('/test')
   handleRequest(@Req() req: Request) {
     this.logger.debug('Yooo');
-    this.requestLogger.debug('Hello from request logger');
-    this.requestLogger.debug(JSON.stringify(process.env));
-    this.requestLogger.error(new Error('This is an error'));
+    // this.requestLogger.debug('Hello from request logger');
+    // this.requestLogger.debug(JSON.stringify(process.env));
+    // this.requestLogger.error(new Error('This is an error'));
+    this.requestLogger.debug({
+      foo: 'bar',
+    });
     return req.headers;
+  }
+
+  @Get('/test-error')
+  async handleError(@Req() req: Request) {
+    await new Promise((resolve, reject) => {
+      reject(new Error('This is an error'));
+    });
+  }
+
+  @Get('/test-warn')
+  handleWarnError(@Req() req: Request) {
+    throw new NotFoundException();
   }
 }
