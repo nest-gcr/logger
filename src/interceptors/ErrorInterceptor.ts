@@ -1,10 +1,8 @@
 import {
   CallHandler,
-  ExecutionContext, HttpException,
-  Inject,
-  Injectable, InternalServerErrorException,
+  ExecutionContext,
+  Injectable,
   NestInterceptor,
-  Scope,
 } from '@nestjs/common';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -39,7 +37,5 @@ export class ErrorInterceptor implements NestInterceptor {
     }
 
     return context.switchToHttp().getRequest();
-    // this can have added logic to take care of REST and other contexts
-
   }
 }

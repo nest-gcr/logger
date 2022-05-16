@@ -25,6 +25,7 @@ export class TestController {
 
   @Get('/test-error')
   async handleError(@Req() req: Request) {
+    this.requestLogger.debug('Entering controller handler');
     throw new Error('WHAT MAAN');
   }
 

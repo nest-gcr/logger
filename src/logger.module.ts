@@ -7,26 +7,32 @@ import axios from 'axios';
 import { install } from 'source-map-support';
 import { LOGGER } from './constants';
 import { ErrorInterceptor } from './interceptors/ErrorInterceptor';
+import { CONTEXT } from '@nestjs/graphql';
+import { LoggerPlugin } from './logger.plugin';
 
 install();
 
 const myFormat = winston.format.printf((options) => {
-  const getSeverity = () => {
-    switch (options.level) {
-      case 'WARN':
-        return 'WARNING';
-      default:
-        return options.level.toUpperCase();
-    }
-  };
+  if (process.env.LOGGER_DRIVER === 'gcp') {
+    const getSeverity = () => {
+      switch (options.level) {
+        case 'WARN':
+          return 'WARNING';
+        default:
+          return options.level.toUpperCase();
+      }
+    };
 
-  const omitSingle = (key, { [key]: _, ...obj }) => obj
+    const omitSingle = (key, { [key]: _, ...obj }) => obj;
 
-  return JSON.stringify({
-    ...omitSingle('stack', options),
-    severity: getSeverity(),
-    message: options.stack ? options.stack : options.message,
-  });
+    return JSON.stringify({
+      ...omitSingle('stack', options),
+      severity: getSeverity(),
+      message: options.stack ? options.stack : options.message,
+    });
+  }
+
+  return `[${options.level.toUpperCase()}][${options.timestamp}][${options[LoggingWinston.LOGGING_TRACE_KEY] || 'global'}] ${options.stack ? options.stack : options.message}`
 });
 
 export const rootLogger = winston.createLogger({
@@ -52,8 +58,8 @@ export const rootLogger = winston.createLogger({
     },
     {
       provide: LOGGER.PROVIDERS.REQUEST_LOGGER,
-      useFactory: (logger: winston.Logger, request: Request, tracePrefix: string) => {
-        let traceKey = 'unknown-trace-key';
+      useFactory: (logger: winston.Logger, request: Request, tracePrefix: string, context: any) => {
+        let traceKey = (Math.random() + 1).toString(36).substring(7);
         let spanKey = 'unknown-span-key';
         if (request?.headers?.['x-cloud-trace-context'] && typeof request?.headers?.['x-cloud-trace-context'] === 'string') {
           const parsed = request?.headers?.['x-cloud-trace-context'].match(/^([a-z0-9]*)\/([0-9]*)/);
@@ -68,7 +74,21 @@ export const rootLogger = winston.createLogger({
 
         return childLogger;
       },
-      inject: [LOGGER.PROVIDERS.LOGGER, REQUEST, 'LOGGER_TRACE_ID_PREFIX'],
+      inject: [LOGGER.PROVIDERS.LOGGER, REQUEST, 'LOGGER_TRACE_ID_PREFIX', CONTEXT],
+    },
+    {
+      provide: 'LOGGER_TRACE_ID',
+      useFactory: async () => {
+        let traceId = null;
+        return {
+          set(t: string) {
+            traceId = t;
+          },
+          get() {
+            return traceId;
+          },
+        };
+      },
     },
     {
       provide: 'LOGGER_TRACE_ID_PREFIX',
@@ -90,7 +110,8 @@ export const rootLogger = winston.createLogger({
     {
       provide: APP_INTERCEPTOR,
       useClass: ErrorInterceptor,
-    }
+    },
+    LoggerPlugin,
   ],
   exports: [LOGGER.PROVIDERS.LOGGER, LOGGER.PROVIDERS.REQUEST_LOGGER],
 })
