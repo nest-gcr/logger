@@ -20,8 +20,27 @@ export const LOGGER = {
         const loggingWinston = new LoggingWinston({
           redirectToStdout: true,
         });
+        const myFormat = winston.format.printf((options) => {
+          const getSeverity = () => {
+            switch (options.level) {
+              case 'WARN':
+                return 'WARNING';
+              default:
+              return options.level.toUpperCase();
+            }
+          };
+          return JSON.stringify({
+            ...options,
+            severity: getSeverity(),
+          });
+        });
         const logger = winston.createLogger({
           level: 'debug',
+          format: winston.format.combine(
+            winston.format.label({ label: 'right meow!' }),
+            winston.format.timestamp(),
+            myFormat,
+          ),
           transports: [
             new winston.transports.Console(),
             // Add Stackdriver Logging
