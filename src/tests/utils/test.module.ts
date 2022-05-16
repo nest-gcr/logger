@@ -4,6 +4,7 @@ import { TestController } from './test.controller';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { TestResolver } from './test.resolver';
+import { LoggerPlugin } from '../../logger.plugin';
 
 @Module({
   imports: [
@@ -14,6 +15,6 @@ import { TestResolver } from './test.resolver';
     }),
   ],
   controllers: [TestController],
-  providers: [TestResolver],
+  providers: [TestResolver, LoggerPlugin],
 })
 export class TestModule {}
