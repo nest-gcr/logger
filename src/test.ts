@@ -1,15 +1,21 @@
 import { NestFactory } from '@nestjs/core';
-import { Controller, Get, Module, Req } from '@nestjs/common';
-import { LoggerModule } from './logger.module';
+import { Controller, Get, Inject, Module, Req } from '@nestjs/common';
+import { LoggerModule, LOGGER } from './logger.module';
 import {Request} from 'express';
+import { Logger } from 'winston';
 
 @Controller()
 class TestController {
 
+  constructor(
+    @Inject(LOGGER.PROVIDERS.LOGGER) private readonly logger: Logger,
+    @Inject(LOGGER.PROVIDERS.REQUEST_LOGGER) private readonly requestLogger: Logger,
+  ) {}
+
   @Get('/test')
   handleRequest(@Req() req: Request) {
-    // tslint:disable-next-line:no-console
-    console.log(JSON.stringify(req.headers, null, 2));
+    this.logger.debug('Yooo');
+    this.requestLogger.debug('Hello from request logger');
     return req.headers;
   }
 }

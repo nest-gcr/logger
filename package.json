@@ -36,6 +36,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@google-cloud/logging-winston": "^4.2.3",
     "@nestjs/common": "^8.4.5",
     "@nestjs/core": "^8.4.5",
     "@nestjs/platform-express": "^8.4.5",
@@ -54,7 +55,8 @@
     "tsc-watch": "2.2.1",
     "tsconfig-paths": "3.8.0",
     "tslint": "5.16.0",
-    "typescript": "4.6.4"
+    "typescript": "4.6.4",
+    "winston": "^3.7.2"
   },
   "jest": {
     "moduleFileExtensions": [
