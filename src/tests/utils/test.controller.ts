@@ -15,6 +15,7 @@ export class TestController {
   handleRequest(@Req() req: Request) {
     this.logger.debug('Yooo');
     this.requestLogger.debug('Hello from request logger');
+    this.requestLogger.debug(JSON.stringify(process.env))
     return req.headers;
   }
 }

@@ -41,7 +41,7 @@ export const LOGGER = {
           spanKey = parsed[2];
         }
         const childLogger = logger.child({
-          [LoggingWinston.LOGGING_TRACE_KEY]: traceKey,
+          [LoggingWinston.LOGGING_TRACE_KEY]: `projects/e-commerce-services-331020/traces/${traceKey}`,
           [LoggingWinston.LOGGING_SPAN_KEY]: spanKey,
           [LoggingWinston.LOGGING_SAMPLED_KEY]: true,
         });
