@@ -46,9 +46,20 @@ export class MyProvider {
   constructor(
     @Inject(LOGGER.PROVIDERS.LOGGER) logger: Logger,
     @Inject(LOGGER.PROVIDERS.REQUEST_LOGGER) requestLogger: Logger
-  ) {
+  ) {}
+  
+  foo () {
+    this.requestLogger.debug('Hello World!')
   }
 }
+```
+
+## Configuration on Google Cloud RUN
+
+In order for logs to be correctly logged to Google Cloud Logging from Cloud Run instances, you need to set the following environment variable into your container:
+
+```
+LOGGER_DRIVER=gcp
 ```
 
 ## Change Log
