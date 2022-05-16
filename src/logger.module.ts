@@ -32,12 +32,12 @@ export const LOGGER = {
           return JSON.stringify({
             ...options,
             severity: getSeverity(),
+            message: options.stack ? options.stack : options.message,
           });
         });
         const logger = winston.createLogger({
           level: 'debug',
           format: winston.format.combine(
-            winston.format.label({ label: 'right meow!' }),
             winston.format.timestamp(),
             myFormat,
           ),
