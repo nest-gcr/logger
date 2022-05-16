@@ -62,7 +62,7 @@ export const rootLogger = winston.createLogger({
         const req = context?.req || request;
         let traceKey = (Math.random() + 1).toString(36).substring(7);
         let spanKey = 'unknown-span-key';
-        if (req?.headers?.['x-cloud-trace-context'] && typeof request?.headers?.['x-cloud-trace-context'] === 'string') {
+        if (req?.headers?.['x-cloud-trace-context'] && typeof req?.headers?.['x-cloud-trace-context'] === 'string') {
           const parsed = req?.headers?.['x-cloud-trace-context'].match(/^([a-z0-9]*)\/([0-9]*)/);
           traceKey = `projects/${tracePrefix}/traces/${parsed[1]}`;
           spanKey = parsed[2];
