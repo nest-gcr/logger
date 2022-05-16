@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import * as request from 'supertest';
+import request from 'supertest';
 import { TestModule } from './utils/test.module';
 
 const getApp = async () => {

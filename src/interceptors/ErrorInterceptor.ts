@@ -10,22 +10,36 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { LOGGER } from '../constants';
 import { Logger } from 'winston';
+import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
+import { ContextIdFactory, ModuleRef } from '@nestjs/core';
 
-@Injectable({
-  scope: Scope.REQUEST,
-})
+@Injectable()
 export class ErrorInterceptor implements NestInterceptor {
-  constructor(@Inject(LOGGER.PROVIDERS.REQUEST_LOGGER) private readonly logger: Logger) {}
+  constructor(
+    private readonly moduleRef: ModuleRef,
+  ) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+    const req = this.getRequest(context);
+    const contextId = ContextIdFactory.getByRequest(req);
+    const logger = await this.moduleRef.resolve<string, Logger>(LOGGER.PROVIDERS.REQUEST_LOGGER, contextId);
     return next.handle().pipe(
       catchError((err) => {
-        this.logger.error(err);
-        if (!(err instanceof HttpException)) {
-          return throwError(new InternalServerErrorException());
-        }
+        logger.error(err);
         return throwError(err);
       }),
     );
+  }
+
+  getRequest(context: ExecutionContext) {
+    if (context.getType<GqlContextType>() === 'graphql') {
+      // do something that is only important in the context of GraphQL requests
+      const gql = GqlExecutionContext.create(context);
+      return gql.getContext().req;
+    }
+
+    return context.switchToHttp().getRequest();
+    // this can have added logic to take care of REST and other contexts
+
   }
 }

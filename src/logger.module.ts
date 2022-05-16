@@ -20,12 +20,15 @@ const myFormat = winston.format.printf((options) => {
     }
   };
 
+  const omitSingle = (key, { [key]: _, ...obj }) => obj
+
   return JSON.stringify({
-    ...options,
+    ...omitSingle('stack', options),
     severity: getSeverity(),
     message: options.stack ? options.stack : options.message,
   });
 });
+
 export const rootLogger = winston.createLogger({
   level: 'debug',
   format: winston.format.combine(
@@ -87,7 +90,7 @@ export const rootLogger = winston.createLogger({
     {
       provide: APP_INTERCEPTOR,
       useClass: ErrorInterceptor,
-    },
+    }
   ],
   exports: [LOGGER.PROVIDERS.LOGGER, LOGGER.PROVIDERS.REQUEST_LOGGER],
 })

@@ -25,9 +25,7 @@ export class TestController {
 
   @Get('/test-error')
   async handleError(@Req() req: Request) {
-    await new Promise((resolve, reject) => {
-      reject(new Error('This is an error'));
-    });
+    throw new Error('WHAT MAAN');
   }
 
   @Get('/test-warn')
