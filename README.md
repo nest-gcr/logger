@@ -35,7 +35,7 @@ export class AppModule {}
 
 ## Usage
 
-Use it anywhere in your application. You have access to two providers:
+1. Use it anywhere in your application. You have access to two providers:
 
 ```typescript
 import { Inject, Injectable } from '@nestjs/common';
@@ -52,6 +52,31 @@ export class MyProvider {
     this.requestLogger.debug('Hello World!')
   }
 }
+```
+
+2. Use the global logger for default nestJS logs:
+
+```typescript
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { rootLogger } from '@nest-gcr/logger';
+
+async function bootstrap() {
+  const app = await NestFactory.create(TestModule, {
+    logger: {
+      ...rootLogger,
+      log: (message, parameters) => {
+        return rootLogger.info(message, parameters);
+      },
+      error: (message, parameters) => {
+        return rootLogger.error(message, parameters)
+      }
+    },
+  });
+  await app.listen(process.env.PORT || 3000);
+}
+
+bootstrap();
 ```
 
 ## Configuration on Google Cloud RUN
