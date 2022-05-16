@@ -35,8 +35,11 @@ export const LOGGER = {
       useFactory: (logger: winston.Logger, request: Request) => {
         let traceKey = 'unknown-trace-key';
         let spanKey = 'unknown-span-key';
+        console.log(request.headers);
         if (request?.headers?.['x-cloud-trace-context'] && typeof request?.headers?.['x-cloud-trace-context'] === 'string') {
+          console.log(request?.headers?.['x-cloud-trace-context']);
           const parsed = request?.headers?.['x-cloud-trace-context'].match(/^([a-z0-9]*)\/([0-9]*)$/);
+          console.log(parsed);
           traceKey = parsed[1];
           spanKey = parsed[2];
         }
