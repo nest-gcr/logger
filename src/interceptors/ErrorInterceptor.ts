@@ -18,7 +18,7 @@ export class ErrorInterceptor implements NestInterceptor {
   ) {}
 
   async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
-    const req = this.getRequest(context);
+    const req = await this.getRequest(context);
     const contextId = ContextIdFactory.getByRequest(req);
     const logger = await this.moduleRef.resolve<string, Logger>(LOGGER.PROVIDERS.REQUEST_LOGGER, contextId);
     const childLogger = logger.child({
