@@ -7,7 +7,7 @@ import axios from 'axios';
 import { install } from 'source-map-support';
 import { LOGGER } from './constants';
 import { ErrorInterceptor } from './interceptors/ErrorInterceptor';
-import safeJsonStringify from 'safe-json-stringify';
+import stringify from 'json-stringify-safe';
 import * as _ from 'lodash';
 
 install();
@@ -44,7 +44,7 @@ const myFormat = winston.format.printf((options) => {
       message: getMessage(),
     };
 
-    const jsonToSend = safeJsonStringify(logMessage);
+    const jsonToSend = stringify(logMessage);
 
     return jsonToSend;
   }
