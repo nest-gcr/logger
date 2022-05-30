@@ -39,7 +39,7 @@ const myFormat = winston.format.printf((options) => {
     };
 
     const logMessage = {
-      ..._.omit(options, ['stack', 'request', 'response', 'config']), // For axios errors... This is really ugly
+      ..._.omit(options, ['toJSON']), // For axios errors... This is really ugly
       severity: getSeverity(),
       message: getMessage(),
     };
