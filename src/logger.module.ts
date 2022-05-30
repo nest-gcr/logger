@@ -28,7 +28,7 @@ const myFormat = winston.format.printf((options) => {
     return options.message;
   };
 
-  if (process.env.LOGGER_DRIVER === 'gcp' || true) {
+  if (process.env.LOGGER_DRIVER === 'gcp') {
     const getSeverity = () => {
       switch (options.level) {
         case 'WARN':
