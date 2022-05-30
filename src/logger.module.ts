@@ -8,6 +8,7 @@ import { install } from 'source-map-support';
 import { LOGGER } from './constants';
 import { ErrorInterceptor } from './interceptors/ErrorInterceptor';
 import safeJsonStringify from 'safe-json-stringify';
+import * as _ from 'lodash';
 
 install();
 
@@ -37,13 +38,13 @@ const myFormat = winston.format.printf((options) => {
       }
     };
 
-    const omitSingle = (key, { [key]: _, ...obj }) => obj;
-
-    return safeJsonStringify({
-      ...omitSingle('stack', options),
+    const logMessage = {
+      ..._.omit(options, ['stack', 'request', 'response']), // For axios errors... This is really ugly
       severity: getSeverity(),
       message: getMessage(),
-    });
+    };
+
+    return safeJsonStringify(logMessage);
   }
 
   const colorizer = winston.format.colorize();
@@ -127,7 +128,7 @@ export const rootLogger = winston.createLogger({
     {
       provide: APP_INTERCEPTOR,
       useClass: ErrorInterceptor,
-    }
+    },
   ],
   exports: [LOGGER.PROVIDERS.LOGGER, LOGGER.PROVIDERS.REQUEST_LOGGER],
 })
