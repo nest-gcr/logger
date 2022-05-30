@@ -44,7 +44,9 @@ const myFormat = winston.format.printf((options) => {
       message: getMessage(),
     };
 
-    return safeJsonStringify(logMessage);
+    const jsonToSend = safeJsonStringify(logMessage);
+
+    return jsonToSend;
   }
 
   const colorizer = winston.format.colorize();

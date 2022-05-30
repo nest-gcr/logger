@@ -37,8 +37,6 @@ export class TestController {
 
   @Get('/trigger-axios-error')
   async handleAxiosError() {
-    this.requestLogger.debug('Hello from axios error handler');
-    await axios.get('http://localhost:3000/test-error');
-    return {status: 'ok'};
+    await axios.get('https://nozefnzenfzej.fr')
   }
 }
