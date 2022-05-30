@@ -2,6 +2,7 @@ import { Controller, Get, HttpException, Inject, NotFoundException, Req } from '
 import { Logger } from 'winston';
 import { Request } from 'express';
 import { LOGGER } from '../../constants';
+import axios from 'axios'
 
 @Controller()
 export class TestController {
@@ -32,5 +33,12 @@ export class TestController {
   @Get('/test-warn')
   handleWarnError(@Req() req: Request) {
     throw new NotFoundException();
+  }
+
+  @Get('/trigger-axios-error')
+  async handleAxiosError() {
+    this.requestLogger.debug('Hello from axios error handler');
+    await axios.get('http://localhost:3000/test-error');
+    return {status: 'ok'};
   }
 }

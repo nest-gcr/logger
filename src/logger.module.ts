@@ -7,30 +7,11 @@ import axios from 'axios';
 import { install } from 'source-map-support';
 import { LOGGER } from './constants';
 import { ErrorInterceptor } from './interceptors/ErrorInterceptor';
+import safeJsonStringify from 'safe-json-stringify';
 
 install();
 
 const myFormat = winston.format.printf((options) => {
-  if (process.env.LOGGER_DRIVER === 'gcp') {
-    const getSeverity = () => {
-      switch (options.level) {
-        case 'WARN':
-          return 'WARNING';
-        default:
-          return options.level.toUpperCase();
-      }
-    };
-
-    const omitSingle = (key, { [key]: _, ...obj }) => obj;
-
-    return JSON.stringify({
-      ...omitSingle('stack', options),
-      severity: getSeverity(),
-      message: options.stack ? options.stack : options.message,
-    });
-  }
-
-  const colorizer = winston.format.colorize();
 
   const getMessage = () => {
     if (options.stack) {
@@ -46,6 +27,26 @@ const myFormat = winston.format.printf((options) => {
     return options.message;
   };
 
+  if (process.env.LOGGER_DRIVER === 'gcp') {
+    const getSeverity = () => {
+      switch (options.level) {
+        case 'WARN':
+          return 'WARNING';
+        default:
+          return options.level.toUpperCase();
+      }
+    };
+
+    const omitSingle = (key, { [key]: _, ...obj }) => obj;
+
+    return safeJsonStringify({
+      ...omitSingle('stack', options),
+      severity: getSeverity(),
+      message: getMessage(),
+    });
+  }
+
+  const colorizer = winston.format.colorize();
   // tslint:disable-next-line:max-line-length
   return colorizer.colorize(options.level, `[${options.level.toUpperCase()}][${options.timestamp}][${options[LoggingWinston.LOGGING_TRACE_KEY] || 'global'}][${options.className || 'UNKNOWN'}] ${getMessage()}`);
 });
