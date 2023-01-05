@@ -1,71 +1,90 @@
-import { Module } from '@nestjs/common';
+import { Inject, Injectable, MiddlewareConsumer, Module, NestMiddleware } from '@nestjs/common';
 import { LoggingWinston } from '@google-cloud/logging-winston';
 import * as winston from 'winston';
-import { Request } from 'express';
+import { NextFunction, Request } from 'express';
 import { APP_INTERCEPTOR, REQUEST } from '@nestjs/core';
 import axios from 'axios';
-import { install } from 'source-map-support';
 import { LOGGER } from './constants';
 import { ErrorInterceptor } from './interceptors/ErrorInterceptor';
-import stringify from 'json-stringify-safe';
 import * as _ from 'lodash';
+import { AsyncLocalStorage } from 'node:async_hooks';
 
-install();
+const asyncLocalStorage = new AsyncLocalStorage<any>()
 
-const myFormat = winston.format.printf((options) => {
-
-  const getMessage = () => {
-    if (options.stack) {
-      return options.stack;
-    }
-    if (options.message && typeof options.message === 'object') {
-      try {
-        return JSON.stringify(options.message);
-        // tslint:disable-next-line:no-empty
-      } catch {
-      }
-    }
-    return options.message;
-  };
-
-  if (process.env.LOGGER_DRIVER === 'gcp') {
-    const getSeverity = () => {
-      switch (options.level) {
-        case 'WARN':
-          return 'WARNING';
-        default:
-          return options.level.toUpperCase();
-      }
+const baseFormats = [
+  winston.format.timestamp(),
+  winston.format.errors({
+    stack: true
+  }),
+  winston.format((info, opts) => {
+    const store = asyncLocalStorage.getStore()
+    return {
+      ...info,
+      ...store,
+      message: info.stack || info.message
     };
+  })(),
+  winston.format((info, opts) => {
+    info.severity = info.level.toUpperCase()
+    if (info.severity === 'WARN') {
+      info.severity = 'WARNING'
+    }
+    return info
+  })(),
+  winston.format((info, opts) => {
+    if (typeof info.message === 'object' && info.message) {
+      info.message = JSON.stringify(info.message)
+    }
+    return info
+  })()
+]
 
-    const logMessage = {
-      ..._.omit(options, ['toJSON']), // For axios errors... This is really ugly
-      severity: getSeverity(),
-      message: getMessage(),
-    };
-
-    const jsonToSend = stringify(logMessage);
-
-    return jsonToSend;
-  }
-
-  const colorizer = winston.format.colorize();
-  // tslint:disable-next-line:max-line-length
-  return colorizer.colorize(options.level, `[${options.level.toUpperCase()}][${options.timestamp}][${options[LoggingWinston.LOGGING_TRACE_KEY] || 'global'}][${options.className || 'UNKNOWN'}] ${getMessage()}`);
-});
+const formats = {
+  'text': winston.format.combine(
+    ...baseFormats,
+    winston.format.printf(options => {
+      const colorizer = winston.format.colorize()
+      return colorizer.colorize(options.level, `[${options.level.toUpperCase()}][${options.timestamp}][${options[LoggingWinston.LOGGING_TRACE_KEY] || 'global'}][${options.className || 'UNKNOWN'}] ${options.message}`)
+    })
+  ),
+  'gcr': winston.format.combine(
+    ...baseFormats,
+    winston.format.json()
+  )
+}
 
 export const rootLogger = winston.createLogger({
   level: 'debug',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    myFormat,
-  ),
+  format: formats[process.env.LOGGER_DRIVER || 'text'],
   transports: [
-    new winston.transports.Console(),
-    // Add Stackdriver Logging
-    // loggingWinston,
+    new winston.transports.Console()
   ],
 });
+
+@Injectable()
+export class LoggerMiddleware implements NestMiddleware {
+  constructor (
+    @Inject('LOGGER_TRACE_ID_PREFIX') private readonly tracePrefix: string
+  ) {}
+
+  use(req: Request, res: Response, next: NextFunction) {
+    console.log('entering loggerMiddleware...')
+    let traceKey = (Math.random() + 1).toString(36).substring(7);
+    let spanKey = 'unknown-span-key';
+    if (req?.headers?.['x-cloud-trace-context'] && typeof req?.headers?.['x-cloud-trace-context'] === 'string') {
+      const parsed = req?.headers?.['x-cloud-trace-context'].match(/^([a-z0-9]*)\/([0-9]*)/);
+      traceKey = `projects/${this.tracePrefix}/traces/${parsed[1]}`;
+      spanKey = parsed[2];
+    }
+    asyncLocalStorage.run({
+      [LoggingWinston.LOGGING_TRACE_KEY]: traceKey,
+      [LoggingWinston.LOGGING_SPAN_KEY]: spanKey,
+      [LoggingWinston.LOGGING_SAMPLED_KEY]: true,
+    }, () => {
+      next()
+    })
+  }
+}
 
 @Module({
   providers: [
@@ -77,38 +96,10 @@ export const rootLogger = winston.createLogger({
     },
     {
       provide: LOGGER.PROVIDERS.REQUEST_LOGGER,
-      useFactory: (logger: winston.Logger, request: any | Request, tracePrefix: string) => {
-        const req = request?.req || request;
-        let traceKey = (Math.random() + 1).toString(36).substring(7);
-        let spanKey = 'unknown-span-key';
-        if (req?.headers?.['x-cloud-trace-context'] && typeof req?.headers?.['x-cloud-trace-context'] === 'string') {
-          const parsed = req?.headers?.['x-cloud-trace-context'].match(/^([a-z0-9]*)\/([0-9]*)/);
-          traceKey = `projects/${tracePrefix}/traces/${parsed[1]}`;
-          spanKey = parsed[2];
-        }
-        const childLogger = logger.child({
-          [LoggingWinston.LOGGING_TRACE_KEY]: traceKey,
-          [LoggingWinston.LOGGING_SPAN_KEY]: spanKey,
-          [LoggingWinston.LOGGING_SAMPLED_KEY]: true,
-        });
-
-        return childLogger;
+      useFactory: (logger: winston.Logger) => {
+        return logger;
       },
-      inject: [LOGGER.PROVIDERS.LOGGER, REQUEST, 'LOGGER_TRACE_ID_PREFIX'],
-    },
-    {
-      provide: 'LOGGER_TRACE_ID',
-      useFactory: async () => {
-        let traceId = null;
-        return {
-          set(t: string) {
-            traceId = t;
-          },
-          get() {
-            return traceId;
-          },
-        };
-      },
+      inject: [LOGGER.PROVIDERS.LOGGER],
     },
     {
       provide: 'LOGGER_TRACE_ID_PREFIX',
@@ -135,5 +126,7 @@ export const rootLogger = winston.createLogger({
   exports: [LOGGER.PROVIDERS.LOGGER, LOGGER.PROVIDERS.REQUEST_LOGGER],
 })
 export class LoggerModule {
-
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
 }

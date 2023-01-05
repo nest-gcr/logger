@@ -1,6 +1,9 @@
+import { install } from 'source-map-support';
 import { NestFactory } from '@nestjs/core';
 import { TestModule } from './tests/utils/test.module';
 import { rootLogger } from './logger.module';
+
+install()
 
 async function bootstrap() {
   const app = await NestFactory.create(TestModule, {
@@ -9,8 +12,8 @@ async function bootstrap() {
       log: (message, parameters) => {
         return rootLogger.info(message, parameters);
       },
-      error: (message, parameters) => {
-        return rootLogger.error(message, parameters)
+      error: (...args) => {
+        return rootLogger.error(...args)
       }
     },
   });
